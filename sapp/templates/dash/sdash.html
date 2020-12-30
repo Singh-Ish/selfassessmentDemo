@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="jumbotron">
+      <p> <h4> Hi <b> {{ sdata.firstName }} {{ sdata.lastName }} </b>, Welcome to the Self Assessment Portal Student Dashboard </h4></p>
+
+    </div>
+
+    <div class="container message">
+      {% if (sdata.assessmentStatus == 0 ) %}
+      <p class="n-stu-msg">  Kindly submit the self assessment </p>
+      {% else %}
+      <p class="s-stu-msg">Thank you for already submitting the assessment. For any concerns reach out to your professor</p>
+      {% endif %}
+    </div>
+
+    <hr class="featurette-divider">
+
+    <p><h6> Please confirm your project details: </h6></p>
+    <br>
+    <div class="student-details" >
+    <p><b>Project Title:</b> {{sdata.title}}</p>
+    <p><b>Group Number:</b> {{sdata.groupNo}}</p>
+    <p><b>Supervisor:</b> {{sdata["supervisor"]}}</p>
+    {% if (sdata.coSupervisor!='-') %}
+    <p> <b>co-supervisor:</b> {{sdata.coSupervisor}}</p>
+    {% endif %}
+      </div>
+      <br>
+    <p class="note">
+    <small>  <i><strong> Note</strong> For any changes to the details kindly contact your supervisor or admin staff </i> </small></p>
+      <br>
+    <hr class="featurette-divider">
+
+    <!-- the status of the other grou members who have submited the assessment  -->
+    <p> <h6> Kindly check the group members of your group </h6> </p>
+    <br>
+    {% include 'status/sstatus.html' %}
+    
+    <p class="note">
+      <small> <i><strong> Note</strong> For any changes to the details kindly contact your supervisor or admin staff </i>
+      </small></p>
+    <br>
+  
+    <button class="btn btn-primary" type="button" onclick="location.href='{{ url_for('saSubmit') }}'" name="button"> Continue </button>
+  
+    
+    <!--
+    {% if(sdata.assessmentStatus == 0) %}
+    <button  class="btn btn-primary" type="button" onclick="location.href='{{ url_for('saSubmit') }}'" name="button"> Continue </button>
+    {% else %}
+    <button class="btn btn-secondary" type="button" onclick="location.href='{{ url_for('saSubmit') }}'" name="button" disabled> Continue</button>
+    {% endif %}
+    -->
+    <br><br>
+
+
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="admindash">
+
+
+<nav id="snav" class="navbar navbar-expand-lg navbar-light  bg-light sticky-top">
+
+
+
+
+  <ul class="nav nav-pills">
+    <li class="nav-item"> <a href="#cstatus" class="nav-link "> Current Status</a>  </li>
+    <li class="nav-item"> <a href="#astatus" class="nav-link "> Assessment Status</a>  </li>
+    <li class="nav-item"> <a href="#rdownload" class="nav-link "> Download Results </a>  </li>
+
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Database</a>
+      <div class="dropdown-menu">
+        <a class="dropdown-item" href="{{ url_for('user') }}">User</a>
+          <a class="dropdown-item" href="{{ url_for('project') }}"> Project</a>
+          <a  class="dropdown-item" href="{{ url_for('facultymembers') }}"> Faculty Members</a>
+          <a  class="dropdown-item" href="{{ url_for('scomment') }}"> Comments </a>
+         <a class="dropdown-item"  href="{{ url_for('arole') }}"> user access  role  </a>
+
+      </div>
+    </li>
+    <li class="nav-item"> <a href="#uploaders" class="nav-link "> Uploaders </a>  </li>
+  </ul>
+
+</nav>
+
+
+<div class="bd-example" >
+
+<div class="jumbotron">
+    <p> <h4> Hey <b> {{user.firstName}} {{user.lastName}}</b>, Welcome to Self Assessment Admin Dashboard </h4><p>
+</div>
+
+
+<br><br>
+<div class="container" id="cstatus">
+  <h2>Dashboard : student current status</h2>
+  <br>
+<div class="row">
+
+  <!-- Total Number of students in the system  -->
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-primary shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Students</div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{tPro}}</div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Students who filled assessment Card Example -->
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-success shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Filled Assessments</div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{fAss}}</div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Pending Requests Card Example -->
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-warning shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Assessments</div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{pAss}}</div>
+          </div>
+         
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<hr class="featurette-divider">
+
+  <div class="satab" id="astatus">
+    <h2>Student Assessment Status</h2>
+    <br>
+    {% include 'other/emailtemp.html'%}
+
+    <br>
+
+    <p>For sending email reminders to all students who hasn't filled the assessment</p>
+<br>
+    <!-- Button trigger modal -->
+<button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#exampleModal">
+  Send Reminder to All
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Send Reminder to All</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to send Email Reminders to everyone ?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+
+        <form action="{{ url_for ('emailall') }}">
+        <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<br>
+
+    <br>
+
+    {% include 'status/asstatus.html' %}
+    <hr class="featurette-divider">
+    <br>
+    <br>
+    <div id="rdownload">
+    <h3>To Download or Export the results</h3>
+    <br>
+    <div class="container">
+    <div class="row">  
+      <div clas="col">
+    <form action="{{url_for('download')}}" method="POST">
+      <button class="btn btn-primary" type="submit" name="button"> <span class="glyphicon glyphicon-save"></span>
+        Export result to excel</button>
+    </form>
+    </div>
+    
+    <div class="col">
+    <form action="{{url_for('emailself')}}" method="POST">
+      <button  class="btn btn-primary" type="submit" name="button">Mail the result to Myself</button>
+
+    </form>
+    </div>
+    </div>
+    </div>
+    </div>
+  </div>
+
+
+  <br><br>
+
+  <hr class="featurette-divider">
+
+  <div class="jumbotron" id="database">
+<h3>Checkout the data in the database </h3>
+<br>
+
+{% include 'other/adbdata.html' %}
+
+</div>
+<hr class="featurette-divider">
+
+
+<!-- project uploader  -->
+{% include 'other/uploaders.html' %}
+
+
+
+{% endblock %}

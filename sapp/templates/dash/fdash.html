@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="jumbotron">
+    <p>Hi <b> {{user.firstName}} {{user.lastName}} </b>, welcometo self assessmnet Faculty dashboard </p>
+</div>
+
+<div class="satab">
+  <p>Current status of your groups and their assessement completion progress</p>
+  {% include 'status/fsstatus.html' %}
+  <form action="{{url_for('download')}}" method="POST">
+    <button type="submit" name="button">Export result to excel</button>
+  </form>
+
+  <br>
+  <form action="{{url_for('emailself')}}" method="POST">
+  <button type="submit" name="button">Mail the result to Myself</button>
+</form>
+</div>
+<br>
+<br>
+
+
+<!--   category rubics rule on click ruler -->
+<div class="sarules">
+  <div class="accordion" id="accordionExample">
+    <div class="card">
+      <div class="card-header" id="headingThree">
+        <h2 class="mb-0">
+          <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+            Category Rubics Rules
+          </button>
+        </h2>
+      </div>
+      <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+        <div class="card-body">
+          <p>{% include 'other/rubics.html'%}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+{% endblock %}

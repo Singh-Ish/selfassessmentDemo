@@ -1,0 +1,36 @@
+
+
+
+
+<table class="fsstatus table table-bordered table-hover">
+  <!-- <caption>Self Assessment </caption> -->
+ <tr>
+   <th scope="col">Project Name</th>
+   <th scope="col">group Number</th>
+   <th scope="col">Student Id</th>
+   <th scope="col">Student Name</th>
+   <th scope="col">Assessment status</th>
+   <th scope="col">Email Reminder</th>
+ </tr>
+{% for p in proj %}
+<tr>
+  <td>{{ p.groupNo }}</td>
+  <td>{{ p.title }}</td>
+  <td>{{p.userId}}</td>
+  <td>{{p.firstName}} {{p.lastName}}</td>
+  {% if (p.assessmentStatus == 0) %}
+  <td><span class="rdot"></span></td>
+  {% else %}
+  <td><span class="gdot"></span></td>
+  {% endif %}
+  <td>
+    <form action="{{url_for('emailone')}}" method="POST">
+      <input type="hidden" name="userId" value="{{p.userId}}">
+      <button>Reminder</button>
+    </form>
+    </tr>
+{% endfor %}
+
+</table>
+<br>
+<br>

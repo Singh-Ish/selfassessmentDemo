@@ -1,0 +1,50 @@
+Important notes :
+
+during login email id is case sensitive 
+
+
+Things to do
+
+* automatic email once all the group members fill the form to tsend the mail to respective faculty group
+*test bugs and access authorization
+*restful api for admin to make necessary changes
+*table data sorting by clicking on the headers
+
+*Use Docker package management for deployment
+* backup mongodb database with dates
+
+* when busy sending all the email need to show a progress bar on the frontend
+
+* logging every event in flask app
+
+Working on :
+
+done:
+*learn how to create sessions an dsave value just for that user
+*disable faculty dashboard
+*fucntionality email to myself almost done : just move the file to the sapp folder
+
+
+
+use case : 
+1. whenever there is a new upload of projects : just for students 
+    - clear the projects 
+    -clear the samatrix evaluation 
+    -clear role 
+
+
+
+
+
+Notes : 
+
+1. DNS imformation 
+2. ssl certification for the browser interface 
+3. box it up with mongo db database : simple red hat box mongo db 
+4. package menagement and security managemtn : rpm or source code 
+5. hosting a cloud locally : its gonna have same security measures 
+6. grants not supporting subscription services 
+7. open stack allows you open data type 
+
+
+saportal

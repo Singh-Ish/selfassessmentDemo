@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<br><br>
+{% include 'other/adbdata.html' %}
+
+<br><br>
+<h2>The project Database overview</h2>
+<br><br>
+<table class="table table-bordered table-hover table-striped">
+    <thead>
+    <tr>
+        <th>Student Id</th>
+        <th>Last Name </th>
+        <th>First Name</th>
+        <th>Group No</th>
+        <th>Title</th>
+        <th>Supervisor</th>
+        <th>Co Supervisor</th>
+        <th>Assessment Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for p in proj %}  
+    <tr>
+        <td>{{p.userId}}</td>
+        <td>{{p.lastName}} </td>
+        <td>{{p.firstName}}</td>
+        <td>{{p.groupNo}}</td>
+        <td>{{p.title}}</td>
+        <td>{{p.supervisor}}</td>
+        <td>{{p.coSupervisor}}</td>
+        <td>{{p.assessmentStatus}}</td>
+    </tr>
+
+    {% endfor %} 
+
+    </tbody>
+
+</table>
+
+
+
+
+
+{% endblock %}
