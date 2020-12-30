@@ -715,10 +715,14 @@ def arole():
 def emailone():
     id = request.form["userId"]
     print("Clicked  userId is ",id)
-    s = User.objects(userId=id).first()
-    print(s.email)
-    temail = emailtemplate.objects().first()
-    return render_template("email.html", s=s, temail=temail)
+    #s = User.objects(userId=id).first()
+    #print(s.email)
+    if User.objects(userId=id).first():
+        temail = emailtemplate.objects().first()
+        return render_template("email.html", s=s, temail=temail)
+    else:
+        flash("Does not have an email id assigned, please reach your admin", "danger")
+        return redirect(url_for('admindash'))
 
 
 @app.route('/emailall', methods=['GET', 'POST'])

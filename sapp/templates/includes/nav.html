@@ -9,11 +9,9 @@
   {% else %}
   
   {% if session['role']=='student' %}
-  <a class="navbar-brand" href="{{ url_for('sdash') }}"><img src="{{ url_for('static',filename='images/logo.png')}}"
-      class="logo" alt=""> </a>
+  <a class="navbar-brand" href="{{ url_for('sdash') }}">Self Assessment Portal  </a>
   {% else %}
-  <a class="navbar-brand" href="{{ url_for('admindash') }}"><img src="{{ url_for('static',filename='images/logo.png')}}"
-      class="logo" alt=""> </a>
+  <a class="navbar-brand" href="{{ url_for('admindash') }}">Self Assessment Portal  </a>
   {% endif %}
   {% endif %}
 
