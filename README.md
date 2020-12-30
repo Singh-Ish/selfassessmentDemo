@@ -1,7 +1,7 @@
-# Self Assessment Portal 
+# Self Assessment Portal Demo 
 
-[Department of System and Computer Engineering, 
-Carleton Univeristy](https://carleton.ca/sce/)
+Live view: https://saportal.herokuapp.com/
+
 
 
 # SA Portal 
