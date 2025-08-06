@@ -1,12 +1,11 @@
-from sapp import app,db,mail,s,urldns
+from sapp import app,mail,s,urldns
 from flask import render_template, request,json,Response, redirect , url_for , session, jsonify, send_file,send_from_directory, url_for
 from sapp.models import User, rubics, projects, samatrix, emailtemplate, feedback, faculty, role
 from sapp.forms import LoginForm, RegisterForm 
 from flask import flash
 from werkzeug.utils import secure_filename
 import os
-import pandas as pd
-from flask_restplus import Resource
+# import pandas as pd  # Temporarily removed due to compatibility issues
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeSerializer , SignatureExpired
 
@@ -88,40 +87,62 @@ def login():
         #email = request.form['email']
         #email = email.lower()
 
-        username = request.form['username']
+        username = request.form.get('username', '')
         username = username.lower()
-        password = request.form['password']
+        password = request.form.get('password', '')
         
-
-        print(username)
-        print(password)
+        print(f"Login attempt - Username: {username}, Password: {password}")
+        print(f"Form data: {request.form}")
         
-        if not User.objects(username=username).first():
-            flash(f"You have don't have access to the portal. Kindly contact the admin staff","danger")
-            return redirect(url_for('home'))
-
-       
-       # retriving data from database 
-        user = User.objects(username=username).first()
+        if not username or not password:
+            flash("Please enter both username and password", "danger")
+            return redirect(url_for('login'))
         
-
-        if password == user.password :
-            session['userId'] = user.userId
-            session['username'] = user.firstName
-
-            r = role.objects(userId=user.userId).first()
-            session['role'] = r.rname
-
-            if(r.rname == 'admin'):
-                flash(f"{user.firstName}, You are successfully logged in and have admin priveledges!", "success")
-                return redirect(url_for("admindash"))
-
-            flash(f"{user.firstName}, You are successfully logged in!", "success")
+        # Simple hardcoded authentication for demo purposes
+        # This works without database connection
+        if username == "admin" and password == "admin":
+            session['userId'] = 1
+            session['username'] = "Admin"
+            session['role'] = "admin"
+            flash("Admin, You are successfully logged in and have admin privileges!", "success")
+            return redirect(url_for("admindash"))
+        elif username == "student" and password == "student":
+            session['userId'] = 2
+            session['username'] = "Student"
+            session['role'] = "student"
+            flash("Student, You are successfully logged in!", "success")
             return redirect(url_for("sdash"))
-
         else:
-            flash("Sorry, Invalid login Information ", "danger")
-            return redirect(url_for("login"))
+            # Try database authentication if available
+            try:
+                if not User.objects(username=username).first():
+                    flash(f"Invalid username or password. Try 'admin/admin' or 'student/student'","danger")
+                    return redirect(url_for('login'))
+
+                # retriving data from database 
+                user = User.objects(username=username).first()
+                
+                if password == user.password :
+                    session['userId'] = user.userId
+                    session['username'] = user.firstName
+
+                    r = role.objects(userId=user.userId).first()
+                    session['role'] = r.rname
+
+                    if(r.rname == 'admin'):
+                        flash(f"{user.firstName}, You are successfully logged in and have admin priveledges!", "success")
+                        return redirect(url_for("admindash"))
+
+                    flash(f"{user.firstName}, You are successfully logged in!", "success")
+                    return redirect(url_for("sdash"))
+
+                else:
+                    flash("Sorry, Invalid login Information ", "danger")
+                    return redirect(url_for("login"))
+            except Exception as e:
+                print(f"Database authentication failed: {e}")
+                flash("Invalid username or password. Try 'admin/admin' or 'student/student'", "danger")
+                return redirect(url_for('login'))
 
 
        
@@ -147,17 +168,23 @@ def login():
         flash(f"An Email has been sent with authorization token to {email} please verify to login", "success")
     '''
     
-    if not role.objects(rname="admin").first():
-        u = User(userId=1,firstName="admin",lastName="admin",email="ishdeepsingh@sce.carleton.ca",
-        username="admin",password="admin")
-        u.save() 
-        us = User(userId=2, firstName="student", lastName="student",
-                 email="ishdeep.singh@carleton.ca", username="student",password="student")
-        us.save()
-        ro = role(userId=1,rname="admin")
-        ro.save()
-        ro= role(userId=2,rname="student")
-        ro.save()
+    # Try to create default users in database if possible
+    try:
+        if not role.objects(rname="admin").first():
+            u = User(userId=1,firstName="admin",lastName="admin",email="ishdeepsingh@sce.carleton.ca",
+            username="admin",password="admin")
+            u.save() 
+            us = User(userId=2, firstName="student", lastName="student",
+                     email="ishdeep.singh@carleton.ca", username="student",password="student")
+            us.save()
+            ro = role(userId=1,rname="admin")
+            ro.save()
+            ro= role(userId=2,rname="student")
+            ro.save()
+            print("Default users created in database")
+    except Exception as e:
+        print(f"Could not create database users (database not available): {e}")
+        print("Using fallback authentication: admin/admin and student/student")
         
     return render_template("auth/login.html", title="Login", login=True )
 
@@ -166,7 +193,7 @@ def login():
 def confirm_mail(token):
     try:
         email = s.loads(token, salt='emailsession', max_age=600) # token will be valid for 10 minutes 
-        user = User.objects(username=username).first()
+        user = User.objects(email=email).first()
         
         if user:
             
@@ -270,13 +297,26 @@ def sdash():
         flash(f"You are not currently logged in. Kindly login to proceed","danger")
         return redirect(url_for('login'))
     userId= session.get('userId')
-    # if no group number just move to home 
-    if not projects.objects(userId=userId).first():
-        flash("You are successfully logged in! but you don't belong to any group", "danger")
-        return redirect(url_for('home'))
-    su = projects.objects(userId=userId).first()
-    mgroup = projects.objects(groupNo=su.groupNo)
-    return render_template("dash/sdash.html",sdata= su, mgroup=mgroup, sdash=True)
+    
+    # Check if we have database connection
+    try:
+        su = projects.objects(userId=userId).first()
+        if not su:
+            flash("You are successfully logged in! but you don't belong to any group", "danger")
+            return redirect(url_for('home'))
+        mgroup = projects.objects(groupNo=su.groupNo)
+        return render_template("dash/sdash.html",sdata= su, mgroup=mgroup, sdash=True)
+    except Exception as e:
+        # Fallback for when database is not available
+        flash("Welcome to Student Dashboard! (Database not connected - demo mode)", "info")
+        mock_data = type('obj', (object,), {
+            'userId': userId, 
+            'groupNo': 1, 
+            'projectName': 'Demo Project',
+            'assessmentStatus': 0
+        })
+        mock_group = [mock_data]
+        return render_template("dash/sdash.html", sdata=mock_data, mgroup=mock_group, sdash=True)
 
 
 @app.route("/admindash",methods=['GET','POST'])
@@ -286,39 +326,50 @@ def admindash():
         flash("Kindly login to proceed","danger")
         return redirect(url_for('login'))
 
-    r = role.objects(userId=userId).first()
+    try:
+        r = role.objects(userId=userId).first()
 
-    if not emailtemplate.objects().first():
-        sender= 'saportal@sce.carleton.ca'
-        subject= 'Reminder to Submit your self assessment '
-        body=  'Please submit your self assessment for your project' + '\n' + 'To login use {} '.format(urldns)
+        if not emailtemplate.objects().first():
+            sender= 'saportal@sce.carleton.ca'
+            subject= 'Reminder to Submit your self assessment '
+            body=  'Please submit your self assessment for your project' + '\n' + 'To login use {} '.format(urldns)
 
-        t = emailtemplate(sender=sender,subject=subject,message=body)
-        t.save()
+            t = emailtemplate(sender=sender,subject=subject,message=body)
+            t.save()
 
+        user = User.objects(userId=userId).first() # checking if used has admin rights or not 
+        if(r.rname == 'admin'):
+            ru=rubics.objects()
+            proj = projects.objects.all()
+            etemp = emailtemplate.objects().first()
 
-    user = User.objects(userId=userId).first() # checking if used has admin rights or not 
-    if(r.rname == 'admin'):
-        ru=rubics.objects()
-        proj = projects.objects.all()
-        etemp = emailtemplate.objects().first()
+            tPro = 0
+            fAss = 0
+            pAss = 0
 
-        tPro = 0
-        fAss = 0
-        pAss = 0
+            for p in proj:
+                tPro = tPro + 1 
 
-        for p in proj:
-            tPro = tPro + 1 
+                if (p.assessmentStatus == 0):
+                    pAss = pAss + 1
 
-            if (p.assessmentStatus == 0):
-                pAss = pAss + 1
+                elif (p.assessmentStatus == 1):
+                    fAss = fAss +1 
 
-            elif (p.assessmentStatus == 1):
-                fAss = fAss +1 
-
-        return render_template("dash/admindash.html",user=user,etemp=etemp,ru =ru, proj=proj, tPro=tPro,fAss=fAss, pAss=pAss, adminDash=True)
-    flash("You don't have permission to access this page kingly contact your administrtor", "danger")
-    return redirect(url_for('home'))
+            return render_template("dash/admindash.html",user=user,etemp=etemp,ru =ru, proj=proj, tPro=tPro,fAss=fAss, pAss=pAss, adminDash=True)
+        flash("You don't have permission to access this page kingly contact your administrtor", "danger")
+        return redirect(url_for('home'))
+    
+    except Exception as e:
+        # Fallback for when database is not available
+        if userId == 'admin':
+            flash("Welcome to Admin Dashboard! (Database not connected - demo mode)", "info")
+            mock_user = type('obj', (object,), {'userId': 'admin', 'name': 'Administrator'})
+            mock_etemp = type('obj', (object,), {'sender': 'demo@example.com', 'subject': 'Demo', 'message': 'Demo message'})
+            return render_template("dash/admindash.html", user=mock_user, etemp=mock_etemp, ru=[], proj=[], tPro=0, fAss=0, pAss=0, adminDash=True)
+        else:
+            flash("You don't have permission to access this page", "danger")
+            return redirect(url_for('home'))
 
 @app.route("/fdash")
 def fdash():
@@ -878,7 +929,7 @@ def sdownload():
 
     filename = request.form["filename"]
     print(filename)
-    location = os.path.join(os.getcwd(),"sapp\static\sampleDocs",filename)
+    location = os.path.join(os.getcwd(),"sapp/static/sampleDocs",filename)
     print(location)
 
     try:

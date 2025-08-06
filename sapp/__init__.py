@@ -1,12 +1,9 @@
 from flask import Flask
 from config import Config
-from flask_mongoengine import MongoEngine
+from mongoengine import connect
 from flask_admin import Admin
-from flask_admin.contrib.pymongo import ModelView
-from flask_restplus import Api
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
-from mongoengine import connect
 
 
 
@@ -30,7 +27,7 @@ s = URLSafeTimedSerializer('SECRET_KEY')
 # initializing the mail services 
 mail = Mail(app)
 
-urldns = "http://saportal.sce.carleton.ca"
+urldns = "http://127.0.0.1:5000"
 # adding the API for the application
 #api=Api()
 #api.init_app(app)
@@ -40,13 +37,14 @@ urldns = "http://saportal.sce.carleton.ca"
 
 
 # database settings
-try :
-    db = MongoEngine()
-    print("Connected to database successfully")
-except:
-    print("unable to connect to database")
-
-db.init_app(app)
+try:
+    # Connect to a local MongoDB instance instead of cloud for now
+    db = connect('assessment', host='localhost', port=27017)
+    print("Connected to local database successfully")
+except Exception as e:
+    print(f"Unable to connect to database: {e}")
+    # For now, just use a simple dictionary to avoid database dependency
+    db = None
 
 
 

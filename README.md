@@ -1,186 +1,228 @@
 # Self Assessment Portal Demo
 
-Live view: https://saportal.herokuapp.com/
+A Flask-based web application for student self-assessment and peer evaluation based on defined rubrics.
 
-# SA Portal
+## Features
 
-Self Assessment portal is to get Student's Assessment about themself and other team members based on the defined rubrics metrix.
+- **Student Dashboard**: Allow students to submit self-assessments
+- **Admin Dashboard**: Administrative interface for managing assessments
+- **Dynamic Data Management**: Upload and manage projects, rubrics, and user data via Excel files
+- **Email Integration**: Automated email notifications and reminders
+- **Role-based Authentication**: Separate access levels for students and administrators
+- **Assessment Analytics**: Export assessment results and generate reports
 
-# Features
+## Tech Stack
 
-    - Student Dashboard
-    - Admin Dashboard
-    - Dynamic project, rubics and user update option
-    - Currently for one paticular course or project based Assessment
+- **Backend**: Python Flask
+- **Database**: MongoDB (with mongoengine ODM)
+- **Frontend**: Bootstrap, jQuery, Jinja2 templates
+- **Data Processing**: OpenPyXL (Excel file handling)
+- **Authentication**: Flask-Login, itsdangerous
+- **Email**: Flask-Mail
+- **Admin Interface**: Flask-Admin
 
-Other Features
+## Recent Bug Fixes and Improvements
 
-- Email token based authentication
-- Intuitive admin dashbaord
-- Inbuild Reminder system
+### Fixed Issues:
+1. **Dependency Compatibility**: Updated requirements.txt with compatible package versions
+2. **Pandas Compatibility**: Added fallback to OpenPyXL when pandas is unavailable (Python 3.13 compatibility)
+3. **Database Connection**: Fixed MongoDB connection issues and added local fallback
+4. **Circular Import**: Resolved circular import issues in the application structure
+5. **File Path Issues**: Fixed Windows-style path separators causing syntax warnings
+6. **Missing Variable**: Fixed undefined `username` variable in authentication flow
+7. **Document Model**: Updated mongoengine Document classes to work without flask-mongoengine
+8. **Flask Version**: Updated to compatible Flask 2.3.3 and removed deprecated imports
 
-## Tech
+## Installation and Setup
 
-SA Portal uses a number of open source projects to work properly:
+### Prerequisites
+- Python 3.8 or higher
+- MongoDB (optional - will use local connection if available)
 
-- [markdown-it] - Markdown parser done right. Fast and easy to extend.
-- [Bootstrap] - great UI boilerplate for modern web apps
-- [python- Flask] - evented I/O for the backend
-- [jQuery] - Javascript
-- [Mongo DB ] - No SQl Database for storing the data
-
-## Installation
-
-The Installation Enviernment is easy to install
-
-#### 1. Clone the source code to the local machine
-
-```sh
-$ mkdir Saportal
-$ git clone https://github.com/Singh-Ish/selfassessment.git
-$ cd selfassessment
+### 1. Clone the Repository
+```bash
+git clone https://github.com/Singh-Ish/selfassessmentDemo.git
+cd selfassessmentDemo
 ```
 
-#### 2. Installing dependencies and environment, Make sure you have python3, MongoDB Installed on the machine.
+### 2. Create Virtual Environment
+```bash
+# Create virtual environment
+python3 -m venv venv
 
-- Installing pip and virtual environment
-
-```sh
-$ python3 get-pip.py
-$ pip install virtualenv
-$ virtualenv env  ; Note env is the environment name
+# Activate virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+venv\Scripts\activate
 ```
 
-- Activating the virtual Environment
-
-For windows
-
-```sh
-$ \env\Scripts\activate.bat
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
 ```
 
-For Mac
+### 4. Database Setup (Optional)
+The application can work with or without MongoDB:
 
-```sh
-source myenv/bin/activate
+**With MongoDB (Recommended):**
+- Install MongoDB locally
+- The application will automatically connect to `mongodb://localhost:27017/assessment`
+
+**Without MongoDB:**
+- The application will still run but database features will be limited
+- Suitable for testing the UI and basic functionality
+
+### 5. Configure Environment Variables (Optional)
+Create a `.env` file in the root directory:
+```env
+SECRET_KEY=your-secret-key-here
+MAIL_SERVER=your-mail-server
+MAIL_USERNAME=your-email
+MAIL_PASSWORD=your-password
 ```
 
-- Installing the project dependent packages
-
-```sh
-$ pip install -r requirement.txt
+### 6. Run the Application
+```bash
+python3 main.py
 ```
 
-- Update your config file details for database , email configurations etc
+The application will start at: http://127.0.0.1:5000
 
-### 3. Running Application
+## Default Login Credentials
 
-we have already configured .flaskenv to run main.py when using "flask run" command.
+When the application starts for the first time, it creates default accounts:
 
-```sh
-$ flask run
+**Admin Account:**
+- Username: `admin`
+- Password: `admin`
+
+**Student Account:**
+- Username: `student`
+- Password: `student`
+
+## File Structure
+```
+selfassessmentDemo/
+├── main.py                     # Application entry point
+├── config.py                   # Configuration settings
+├── requirements.txt            # Python dependencies
+├── README.md                   # This file
+├── sapp/                       # Main application package
+│   ├── __init__.py            # App initialization
+│   ├── models.py              # Database models
+│   ├── routes.py              # URL routes and views
+│   ├── forms.py               # WTForms form definitions
+│   ├── static/                # Static files (CSS, JS, docs)
+│   │   ├── css/
+│   │   ├── docs/              # Excel file uploads
+│   │   └── sampleDocs/        # Sample Excel templates
+│   └── templates/             # Jinja2 HTML templates
+│       ├── base.html
+│       ├── index.html
+│       ├── auth/              # Authentication templates
+│       ├── dash/              # Dashboard templates
+│       └── other/             # Other templates
+└── venv/                       # Virtual environment (created during setup)
 ```
 
-Output will be like this. You can also change the host and port details by simply using " Flask run --host 0.0.0.0 --port 3000"
+## Usage
 
-```sh
- * Serving Flask app "main.py" (lazy loading)
- * Environment: development
- * Debug mode: on
- * Restarting with stat
-Connected to database successfully
- * Debugger is active!
- * Debugger PIN: 247-067-783
- * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
-Connected to database successfully
+### For Students:
+1. Log in with student credentials
+2. Navigate to the student dashboard
+3. Complete self-assessment forms
+4. Submit peer evaluations
+
+### For Administrators:
+1. Log in with admin credentials
+2. Access the admin dashboard
+3. Upload Excel files for:
+   - User details (`userDetails.xlsx`)
+   - Project information (`projectDetails.xlsx`)
+   - Rubrics matrix (`rubicsMetrix.xlsx`)
+   - Faculty details (`facultyDetails.xlsx`)
+4. Monitor assessment progress
+5. Export results
+
+## Excel File Formats
+
+Sample Excel files are provided in `sapp/static/sampleDocs/`:
+
+### userDetails.xlsx
+Required columns: `userId`, `firstName`, `lastName`, `email`
+
+### projectDetails.xlsx
+Required columns: `groupNo`, `title`, `supervisor`, `coSupervisor`, `userId`, `lastName`, `firstName`, `assessmentStatus`
+
+### rubicsMetrix.xlsx
+Required columns: `Indicator`, `Level 1: Beginning`, `Level 2: Developing`, `Level 3: Accomplished`, `Level 4: Exemplary`
+
+### facultyDetails.xlsx
+Required columns: `lastName`, `firstName`, `email`
+
+## Production Deployment
+
+### Using Gunicorn
+```bash
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:8000 main:app
 ```
 
-Verify the deployment by navigating to your server address in your preferred browser.
-
-```sh
-http://127.0.0.1:5000/
+### Using Docker
+```dockerfile
+FROM python:3.9
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 5000
+CMD ["python", "main.py"]
 ```
 
-### 4. Run and Configure MongoDb Database
+## Configuration
 
-Make sure local instance of MongoDB is up and running.
+Key configuration options in `config.py`:
 
-The "Flask run" command will create database collections automatically,
+- **Database**: MongoDB connection string
+- **Email**: SMTP server settings for notifications
+- **File Upload**: Directory for storing uploaded Excel files
+- **Security**: Secret key for session management
 
-Database Name : assessment
+## Troubleshooting
 
-It will have below Collections Database schema Overview
+### Common Issues:
 
-- User : have the details about the user that have access to the portal
-- Project : project or course that the students are in group together
-- role : Role of the user weather a is a student or admin ; Access level
-- rubics : evaluating matrix
-- samatrix : student response collection
-- emailtemplate : default reminder template
-- faculty : faculty details
-- feedback : user feedback about the portal or about the course
+1. **Import Errors**: Ensure virtual environment is activated and all dependencies are installed
+2. **Database Connection**: Check MongoDB service status or run without database
+3. **Port Conflicts**: Change port in `main.py` if 5000 is occupied
+4. **File Upload Issues**: Ensure `sapp/static/docs/` directory exists and is writable
 
-Re-run step 3
+### Debug Mode:
+The application runs in debug mode by default. To disable:
+```python
+app.run(debug=False, host='127.0.0.1', port=5000)
+```
 
-# running the code in production on red hat server
+## Contributing
 
-webserver: Nginx
-python webserver: Supervisor and gunicorn
-
-## server restart
-
-check the status
-'''sh
-$sudo systemctl status nginix
-< needs to be active >
-
-$sudo systemctl status supervisord
-< need to be active >
-
-'''
-
-# Code Architecture Design Explanation
-
-Its an open source projet and for the ease providing the details code description for better collaboration.
-
-- Requirement.txt contains list of all the packages need to be preinstalled into the system before running the application
-
-- main.py is the starting point of the application. It imports the actual app sapp to the applicaiton.
-
-- Config.py, contains the Configuration setting of the applicaiton like the
-
-  - Database setting
-  - Upload Folder settings
-  - Email configuration
-
-- Sapp folder contains all the files related code to the development of the applicaiton
-
-  - Static Folder
-
-    - Css , external css file for styling the html
-    - Docs, all the uploaded documents are stored and read from this folder. location can be changed in config
-    - Images, contains the images like the logo etc
-    - Sample Docs, Contains a sample document which are allowed to upload on the portal.
-
-  - Templates Folder
-  - (**init**.py) file, contains all the basic instance creation whenever the sapp folder is imported
-  - forms.py, Optional creating the wtf forms for registeration or login etc
-  - models.py , Database schema
-    -routes.py, defines the url routes for application, this also import the data from database
-
-### Use case
-
-The Canadian Engineering Accreditation Board requires graduates of engineering programs to possess 12 attributes at the time of graduation. You have been asked to complete a self –assessment of yourself and your group for Graduate Attribute 6: Individual and team work related to your 4th Year Capstone Project . Graduate Attribute 6 represents a student’s ability to work effectively as a member and leader in teams, preferably in a multi-disciplinary setting. Graduate attribute measurements will not be taken into consideration in determining a student’s grade in the course.
-
-# Coming Soon New Features!
-
-- Self Assessment for Multiple courses
-- Scheduled reminder system
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit changes: `git commit -am 'Add feature'`
+4. Push to branch: `git push origin feature-name`
+5. Submit a pull request
 
 ## License
 
 GNU General Public License v3.0
 
-**Free Software, Hell Yeah!**
+## Support
 
-[git-repo-url]: https://github.com/Singh-Ish/selfassessment.git
+For issues and questions:
+- Create an issue on GitHub
+- Check the troubleshooting section above
+- Review the sample Excel files for proper format
+
+---
+
+**Note**: This application is designed for educational assessment purposes and should be customized according to specific institutional requirements.

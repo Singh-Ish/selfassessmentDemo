@@ -1,20 +1,59 @@
 import flask
-from sapp import db 
+try:
+    from sapp import db 
+except ImportError:
+    db = None
 #from werkzeug.security import generate_password_hash, check_password_hash
 from sapp import admin
-import pandas as pd
+from mongoengine import Document, IntField, StringField
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    print("Pandas not available, using openpyxl fallback")
+    import openpyxl
+    PANDAS_AVAILABLE = False
 import os
 from flask import flash,json
 
+# Helper function to read Excel files
+def read_excel_file(file_path):
+    """Read Excel file and return list of dictionaries"""
+    try:
+        if PANDAS_AVAILABLE:
+            df = pd.read_excel(file_path)
+            return df.to_dict("records")
+        else:
+            # Use openpyxl as fallback
+            wb = openpyxl.load_workbook(file_path)
+            ws = wb.active
+            
+            # Get headers from first row
+            headers = [cell.value for cell in ws[1]]
+            
+            # Get data from remaining rows
+            data = []
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                row_dict = {}
+                for i, value in enumerate(row):
+                    if i < len(headers) and headers[i]:
+                        row_dict[headers[i]] = value
+                data.append(row_dict)
+            
+            return data
+    except Exception as e:
+        print(f"Error reading Excel file {file_path}: {e}")
+        return []
+
 # database  schema  are described here
-class User(db.Document):
+class User(Document):
     # user authentication information 
-    userId = db.IntField(unique=True) # same as student id
-    email = db.StringField( max_length=50, unique=True)
-    firstName = db.StringField(max_length=50)
-    lastName = db.StringField(max_length=50)
-    username = db.StringField(max_length=50, unique=True)
-    password = db.StringField(max_length=50)
+    userId = IntField(unique=True) # same as student id
+    email = StringField( max_length=50, unique=True)
+    firstName = StringField(max_length=50)
+    lastName = StringField(max_length=50)
+    username = StringField(max_length=50, unique=True)
+    password = StringField(max_length=50)
     
     def userUpload():
         # check if the role is student or admin 
@@ -34,9 +73,7 @@ class User(db.Document):
         
         print("reading the excel file ")
         # adding the user details to the database 
-        ur = pd.read_excel('sapp/static/docs/userDetails.xlsx')
-        ur.reset_index(inplace=False)
-        usr = ur.to_dict("records")
+        usr = read_excel_file('sapp/static/docs/userDetails.xlsx')
         print(usr)
 
         #flash("can't read the file headers", "danger")
@@ -78,21 +115,19 @@ class User(db.Document):
     '''
 
 
-class rubics(db.Document):
-    Indicator = db.StringField()
-    Beginning = db.StringField()
-    Developing = db.StringField()
-    Accomplished = db.StringField()
-    Exemplary = db.StringField()
+class rubics(Document):
+    Indicator = StringField()
+    Beginning = StringField()
+    Developing = StringField()
+    Accomplished = StringField()
+    Exemplary = StringField()
 
     def uploadnew():
         #deleting all the previous data
         data = rubics.objects()
         data.delete()
         #db.DeleteMany({})
-        ru = pd.read_excel('sapp/static/docs/rubicsMetrix.xlsx')
-        ru.reset_index(inplace=False)
-        rub = ru.to_dict("records")
+        rub = read_excel_file('sapp/static/docs/rubicsMetrix.xlsx')
 
         for r in rub:
             #print(r['Indicator'])
@@ -106,15 +141,15 @@ class rubics(db.Document):
             print("uploaded the new rubics to the database")
 
 
-class projects(db.Document):
-    groupNo = db.IntField()
-    title = db.StringField(max_length=200)
-    supervisor = db.StringField(max_length=200)
-    coSupervisor = db.StringField(max_length=200)
-    userId = db.IntField(unique=True , required=True)
-    lastName = db.StringField( max_length=50)
-    firstName = db.StringField( max_length=50)
-    assessmentStatus = db.IntField()
+class projects(Document):
+    groupNo = IntField()
+    title = StringField(max_length=200)
+    supervisor = StringField(max_length=200)
+    coSupervisor = StringField(max_length=200)
+    userId = IntField(unique=True , required=True)
+    lastName = StringField( max_length=50)
+    firstName = StringField( max_length=50)
+    assessmentStatus = IntField()
 
     def pupload():
         
@@ -123,30 +158,27 @@ class projects(db.Document):
         data.delete()
 
         # reading the file from the uploaded location 
-        pf = pd.read_excel('sapp/static/docs/projectDetails.xlsx')
-        pf = pf.fillna(method='ffill')
-        pf.groupNo = pf.groupNo.astype(int)
-        pf.userId = pf.userId.astype(int)
-        pf.assessmentStatus = pf.assessmentStatus.astype(int)
-        pf.coSupervisor = pf.coSupervisor.astype(object)
-        #print(pf.dtypes)
-        # removing the duplication enteries and creating a new dataframe df
-        pf = pf.drop_duplicates()
+        pf = read_excel_file('sapp/static/docs/projectDetails.xlsx')
         
-        #print(pf.columns)
-        pf.reset_index(inplace=False)
-        pf = pf.to_dict("records")
-        #print(pf)
+        # Basic data cleaning - handle missing values
+        for project in pf:
+            if 'coSupervisor' not in project or project['coSupervisor'] is None:
+                project['coSupervisor'] = ''
+            
+            # Ensure required fields are not None
+            for field in ['groupNo', 'userId', 'assessmentStatus']:
+                if project.get(field) is None:
+                    project[field] = 0
 
         for p in pf:
-            groupNo = p['groupNo']
+            groupNo = int(p['groupNo']) if p['groupNo'] is not None else 0
             title = p['title']
             supervisor = p['supervisor']
-            coSupervisor = str(p['coSupervisor'])
-            userId = p['userId']
+            coSupervisor = str(p['coSupervisor']) if p['coSupervisor'] is not None else ''
+            userId = int(p['userId']) if p['userId'] is not None else 0
             lastName = p['lastName']
             firstName = p['firstName']
-            assessmentStatus = p['assessmentStatus']
+            assessmentStatus = int(p['assessmentStatus']) if p['assessmentStatus'] is not None else 0
             
             s = projects(groupNo=groupNo, title=title, supervisor=supervisor, coSupervisor=coSupervisor, userId=userId,
                              lastName=lastName, firstName=firstName, assessmentStatus=assessmentStatus)
@@ -156,12 +188,12 @@ class projects(db.Document):
 
 
 ######## sa Matrix
-class samatrix(db.Document):
-    sid = db.IntField()
-    fsid = db.IntField()
-    fsname = db.StringField()
-    Indicator = db.StringField()
-    value = db.IntField()
+class samatrix(Document):
+    sid = IntField()
+    fsid = IntField()
+    fsname = StringField()
+    Indicator = StringField()
+    value = IntField()
 
     #### defining a fuction eval
 
@@ -183,19 +215,20 @@ class samatrix(db.Document):
                 res = samatrix.objects(fsid=p.userId, Indicator=r.Indicator)
                 res = res.to_json()
                 res = json.loads(res)
-                df = pd.DataFrame(res)
-
-                vavg = df[['value']].mean()
-                vavg = int(vavg)
-                #print(vavg)
+                
+                # Calculate average without pandas
+                if res:
+                    values = [item['value'] for item in res if 'value' in item]
+                    vavg = int(sum(values) / len(values)) if values else 0
+                else:
+                    vavg = 0
+                
                 rinl = dict([(r.Indicator, vavg)])
-
                 rin.update(rinl)
 
             result.append(rin)
 
         # adding the projects where students havent given assessment
-
         pro = projects.objects(assessmentStatus=0)
 
         # reading all the projects who have filled the assessment
@@ -217,71 +250,67 @@ class samatrix(db.Document):
         
         cresult = result + eresult
 
-        #print(cresult)
-        
-        df = pd.DataFrame(cresult)
-
-        try:
-            df = df.rename(columns={'6.1 Personal and group time management': 'GA 6.1', '6.2 Group culture, group dynamics': 'GA 6.2', '6.3 Leadership: initiative and mentoring, areas of expertise, and interdisciplinary teams':'GA 6.3'})
-            print(df)
-        except:
-            print("can't change the coloums")
-        '''
-        dru = pd.read_excel('sapp/static/docs/rubicsMetrix.xlsx')
-        dru = dru.set_index('Indicator')
-        dru.to_excel("result.xlsx")
-
-
-        dfres = pd.DataFrame(cresult)
-        dfres = dfres.sort_values(by=['userId'])
-        
-        dfres['name'] = dfres['firstName'].astype(str) + " " + dfres['lastName'].astype(str) 
-        dfres = dfres.drop(columns=['firstName','lastName','userId'])
-    
-        dfres = dfres[["name", "6.1 Personal and group time management",
-                       "6.2 Group culture, group dynamics", "6.3 Leadership: initiative and mentoring, areas of expertise, and interdisciplinary teams"]]
-        dfres_t = dfres.set_index('name').transpose()
-        
-        dfres_t.to_excel("tresult.xlsx")
-        res = pd.concat([dru,dfres_t],axis=1,sort=False)
-        #print(res)
-        '''
-        filename = 'assessmentresult.xlsx'
-        df.to_excel(filename,index=False)
-        print(" save the xls file")
-
+        # Simple Excel output without pandas
+        if PANDAS_AVAILABLE:
+            df = pd.DataFrame(cresult)
+            try:
+                df = df.rename(columns={'6.1 Personal and group time management': 'GA 6.1', '6.2 Group culture, group dynamics': 'GA 6.2', '6.3 Leadership: initiative and mentoring, areas of expertise, and interdisciplinary teams':'GA 6.3'})
+                print(df)
+            except:
+                print("can't change the columns")
+            
+            filename = 'assessmentresult.xlsx'
+            df.to_excel(filename,index=False)
+            print("saved the xls file")
+        else:
+            # Basic Excel output using openpyxl
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            
+            if cresult:
+                # Write headers
+                headers = list(cresult[0].keys())
+                for col, header in enumerate(headers, 1):
+                    ws.cell(row=1, column=col, value=header)
+                
+                # Write data
+                for row, data in enumerate(cresult, 2):
+                    for col, header in enumerate(headers, 1):
+                        ws.cell(row=row, column=col, value=data.get(header, ''))
+            
+            filename = 'assessmentresult.xlsx'
+            wb.save(filename)
+            print("saved the xls file")
 
 
-class emailtemplate(db.Document):
+
+class emailtemplate(Document):
     #userId = db.IntField(unique=True, required=True) in future there will be multiple admins so multiple templates
-    sender = db.StringField(default='ishdeepsingh@sce.carleton.ca')
-    subject = db.StringField(default='self assessment portal')
-    message = db.StringField(default='please submit your assessment ')
+    sender = StringField(default='ishdeepsingh@sce.carleton.ca')
+    subject = StringField(default='self assessment portal')
+    message = StringField(default='please submit your assessment ')
 
 ########## students comments and feedback 
-class feedback(db.Document):
-    userId = db.IntField(unique=True)
-    name = db.StringField()
-    comment = db.StringField()
+class feedback(Document):
+    userId = IntField(unique=True)
+    name = StringField()
+    comment = StringField()
 
 
 ####### faculty related data for sending email automatically once all the groups submit the assesment 
-class faculty(db.Document):
-    lastName = db.StringField(unique=True)
-    firstName = db.StringField()
-    email = db.StringField(max_length=30, unique=True)
+class faculty(Document):
+    lastName = StringField(unique=True)
+    firstName = StringField()
+    email = StringField(max_length=30, unique=True)
 
     def newf():
         #deleting all the previous data
         data = faculty.objects()
         data.delete()
         #db.DeleteMany({})
-        fu = pd.read_excel('sapp/static/docs/facultyDetails.xlsx')
-        fu.reset_index(inplace=False)
-        fa = fu.to_dict("records")
-
-        print(fa)
+        fa = read_excel_file('sapp/static/docs/facultyDetails.xlsx')
         
+        print(fa)
         
         for r in fa:
             lastName = r['lastName']
@@ -293,7 +322,7 @@ class faculty(db.Document):
         
 
 #######role based authentication 
-class role(db.Document):
-    userId = db.IntField(unique=True)
-    rname = db.StringField(max_length=30, default='student')
+class role(Document):
+    userId = IntField(unique=True)
+    rname = StringField(max_length=30, default='student')
 
