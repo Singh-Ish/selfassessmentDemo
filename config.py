@@ -19,9 +19,9 @@ class Config(object):
     # changing the server name 
     #SERVER_NAME = '127:0.0.1:6000'
 
-    #database setting - supports both local and cloud MongoDB
+    #database setting - prioritize local MongoDB for development
     MONGODB_SETTINGS= {
-        'host': os.environ.get('MONGODB_URI') or "mongodb+srv://ishdeepsingh:change.711@cluster0.ulpu6.mongodb.net/assessment"
+        'host': os.environ.get('MONGODB_URI') or "mongodb://localhost:27017/assessment"
     }
 
     #admin setting

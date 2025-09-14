@@ -10,7 +10,7 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=True
-      - MONGODB_URI='host':"mongodb+srv://ishdeepsingh:change.711@cluster0.ulpu6.mongodb.net/assessment"
+      - MONGODB_URI=mongodb://mongodb:27017/assessment
       - SECRET_KEY=dev-secret-key
       - PORT=5000
       - HOST=0.0.0.0
