@@ -6,7 +6,7 @@ import os
 class Config(object):
 
     """
-    Config class defines the deafult configuration for the applicaiton 
+    Config class defines the default configuration for the application 
     - Database
     - Flask-Admin
     - Upload Folder 
@@ -14,14 +14,14 @@ class Config(object):
 
     """
 
-    SECRET_KEY = os.environ.get('SECRET_KEY') or "secret_string"
+    SECRET_KEY = os.environ.get('SECRET_KEY') or "dev-secret-change-in-production"
 
     # changing the server name 
     #SERVER_NAME = '127:0.0.1:6000'
 
-    #database setting
+    #database setting - supports both local and cloud MongoDB
     MONGODB_SETTINGS= {
-        'host':"mongodb+srv://ishdeepsingh:change.711@cluster0.ulpu6.mongodb.net/assessment"
+        'host': os.environ.get('MONGODB_URI') or "mongodb+srv://ishdeepsingh:change.711@cluster0.ulpu6.mongodb.net/assessment"
     }
 
     #admin setting

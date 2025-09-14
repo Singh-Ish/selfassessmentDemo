@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=False
+      - MONGODB_URI=mongodb://mongodb:27017/assessment
+      - SECRET_KEY=${SECRET_KEY:-production-secret-key-change-me}
+    volumes:
+      - uploads:/app/sapp/static/docs
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  mongodb:
+    image: mongo:7.0-jammy
+    container_name: self_assessment_mongo_prod
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=assessment
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongodb/init:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    restart: unless-stopped
+    command: mongod --auth
+
+  nginx:
+    image: nginx:alpine
+    container_name: self_assessment_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/ssl/certs
+    depends_on:
+      - web
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  uploads:

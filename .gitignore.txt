@@ -1,4 +1,0 @@
-__pycache__
-senv
-_config.yml
-env

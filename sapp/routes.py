@@ -92,7 +92,6 @@ def login():
         password = request.form.get('password', '')
         
         print(f"Login attempt - Username: {username}, Password: {password}")
-        print(f"Form data: {request.form}")
         
         if not username or not password:
             flash("Please enter both username and password", "danger")
@@ -170,7 +169,14 @@ def login():
     
     # Try to create default users in database if possible
     try:
-        if not role.objects(rname="admin").first():
+        # Check if we already have default admin user
+        existing_admin = None
+        try:
+            existing_admin = role.objects(rname="admin").first()
+        except:
+            pass
+            
+        if not existing_admin:
             u = User(userId=1,firstName="admin",lastName="admin",email="ishdeepsingh@sce.carleton.ca",
             username="admin",password="admin")
             u.save() 
